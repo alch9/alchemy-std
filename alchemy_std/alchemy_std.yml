@@ -7,6 +7,15 @@ units:
         SSH command:
             func: ssh_runcmd
 
+        SSH mkdir:
+            func: ssh_mkdir
+
+        SSH umount:
+            func: ssh_mkdir
+
+        SSH ls:
+            func: ssh_ls
+
     alchemy_std.nfs_units:
         NFS mount remote:
             func: nfs_mount_remote

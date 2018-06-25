@@ -2,6 +2,7 @@
 def init_ssh_connection(host, username = None, password = None, port = 22):
     import paramiko
     from paramiko.client import SSHClient
+
     ssh_conn = SSHClient()
     ssh_conn.load_system_host_keys()
     ssh_conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -29,3 +30,23 @@ def ssh_runcmd(cmd, hostname = None, ssh_conn = None, username = None, password 
 
     return {'ssh_stdout': stdout, 'ssh_stderr': stderr, 'ssh_rc': rc}
 
+
+def ssh_mkdir(ssh_conn, dirpath, create_all=True):
+    if create_all:
+        cmd = "mkdir -p %s" % dirpath
+    else:
+        cmd = "mkdir %s" % dirpath
+
+    return ssh_runcmd(cmd, ssh_conn = ssh_conn)
+
+def ssh_umount(ssh_conn, dirpath, create_all=True):
+    if create_all:
+        cmd = "umount -p %s" % dirpath
+    else:
+        cmd = "umount %s" % dirpath
+
+    return ssh_runcmd(cmd, ssh_conn = ssh_conn)
+
+def ssh_ls(ssh_conn, filepath, list_options=""):
+    cmd = "ls {0} {1}".format(list_options, filepath)
+    return ssh_runcmd(cmd, ssh_conn = ssh_conn)
