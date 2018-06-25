@@ -11,10 +11,25 @@ def build_nfs_mount_cmd(host, share_path, local_path, read_only = False):
     return {'nfs_mount_cmd': cmd}
 
 
-def nfs_mount_remote(ssh_session, host, share_path, local_path, read_only = False):
-    from alchemy_std.ssh_units
+def nfs_mount_remote(ssh_session, nfs_host, share_path, local_path, read_only = False):
+    """
+    input:
+        nfs_host: Host name of the nfs server
+        ssh_session: Connected SSH Session
+        share_path: NFS server share path (as seen in showmount -e command)
+        local_path: Dir at which the nfs needs to be mounter
+        read_only: (False) Mount to be read_only or not
+    output:
+        ssh_stdout: STDOUT stream
+        ssh_stderr: STDERR stream
+        ssh_rc: Return code of the command run
+    """
 
-    cmd = build_nfs_mount_cmd(host, share_path, local_path, read_only)
+    from alchemy_std import ssh_units
 
-    return ssh_units.ssh_runcmd(None, cmd, ssh_conn = ssh_session)
+    cmd = build_nfs_mount_cmd(nfs_host, share_path, local_path, read_only)['nfs_mount_cmd']
+
+    print "NFS mount:", cmd
+    res = ssh_units.ssh_runcmd(cmd, ssh_conn = ssh_session)
+    return res
 

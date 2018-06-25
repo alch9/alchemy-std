@@ -1,4 +1,4 @@
-
+include: [core]
 
 units:
     alchemy_std.ssh_units:
@@ -10,4 +10,50 @@ units:
     alchemy_std.nfs_units:
         NFS mount remote:
             func: nfs_mount_remote
+
+flows:
+    nfs_mount:
+        - Context:
+            values:
+                ssh_host: 172.16.21.161
+                ssh_user: root
+                ssh_passwd: druva
+                nfs_host: 192.168.1.124
+                nfs_path: /vol/nfs_dev
+                nfs_mount_path: /root/work/nas
+
+        - Init ssh connection:
+            host: $ssh_host
+            username: $ssh_user
+            password: $ssh_passwd
+
+        - SSH command:
+            ssh_conn: $ssh_conn
+            cmd: mkdir -p /root/work/nas
+
+        - SSH command:
+            ssh_conn: $ssh_conn
+            cmd: umount /root/work/nas
+
+        - Print context:
+            param_list: [cmd]
+
+        - NFS mount remote:
+            ssh_session: $ssh_conn
+            nfs_host: $nfs_host
+            share_path: $nfs_path
+            local_path: $nfs_mount_path
+
+        - Print stream:
+            stream: $ssh_stderr
+
+        - Print stream:
+            stream: $ssh_stderr
+
+        - SSH command:
+            ssh_conn: $ssh_conn
+            cmd: ls -l /root/work/nas
+
+        - Print stream:
+            stream: $ssh_stdout
 

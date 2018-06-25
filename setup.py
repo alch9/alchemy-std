@@ -5,6 +5,7 @@ setup(
     version='0.1.0',
     author='Sudeep Jathar',
     author_email='sudeep.jathar@gmail.com',
+    url='https://github.com/sudeep9/alchemy-std',
     description='Standard library for Alchemy automation framework',
     license='MIT',
     classifiers=[
@@ -18,6 +19,6 @@ setup(
     packages=['alchemy_std'],
     install_requires=['paramiko'],
     package_data = {
-        'alchemy': ["*.yml"]
+        'alchemy_std': ["*.yml"]
     }
 )

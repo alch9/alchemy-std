@@ -1,18 +1,21 @@
 
 def init_ssh_connection(host, username = None, password = None, port = 22):
+    import paramiko
+    from paramiko.client import SSHClient
     ssh_conn = SSHClient()
     ssh_conn.load_system_host_keys()
-    ssh_conn.connect(hostname, username = username, password = password)
+    ssh_conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_conn.connect(host, username = username, password = password)
 
     return {'ssh_conn': ssh_conn}
 
-def ssh_runcmd(hostname, cmd, ssh_conn = None, username = None, password = None, port = 22):
+def ssh_runcmd(cmd, hostname = None, ssh_conn = None, username = None, password = None, port = 22):
+    import paramiko
     from paramiko.client import SSHClient
 
     if ssh_conn is None:
-        ssh_conn = SSHClient()
-        ssh_conn.load_system_host_keys()
-        ssh_conn.connect(hostname, username = username, password = password)
+        val = init_ssh_connection(hostname, username=username, password=password, port=port)
+        ssh_conn = val['ssh_conn']
 
     chan = ssh_conn.get_transport().open_session()
     chan.exec_command(cmd)
