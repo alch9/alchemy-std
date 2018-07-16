@@ -1,6 +1,24 @@
 include: [alchemy]
 
 units:
+    alchemy_std.shell:
+        Command:
+            func: runcmd
+            type: meta
+        Ping:
+            type: derived
+            input:
+                host: Host name to ping
+                count: Number of times to ping
+            defaults:
+                count: 1
+            units:
+                - to-str:
+                    var: $count
+                - Command:
+                    args: [ping, -c, $str_var, $host]
+
+            
     alchemy_std.ssh_units:
         Init ssh connection:
             func: init_ssh_connection
@@ -66,3 +84,20 @@ flows:
         - Print stream:
             stream: $ssh_stdout
 
+flows:
+    list-dir:
+        - CLI positional:
+            spec: [dirname]
+        - Command:
+            args:
+                - ls
+                - -lrt
+                - $input_dirname
+        - Print stream:
+            stream: $shell_stdout
+
+    ping:
+        - CLI positional:
+            spec: [host]
+        - Ping:
+            host: $input_host
