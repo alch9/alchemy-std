@@ -1,6 +1,14 @@
 include: [alchemy]
 
 units:
+    alchemy_std.yaml_units:
+        load-yaml-file:
+            func: load_yaml_file
+            input:
+                filepath: Path to yaml file
+            output:
+                yaml_data: Parsed yaml object as Python dictionary
+
     alchemy_std.shell:
         Command:
             func: runcmd
@@ -20,23 +28,92 @@ units:
 
             
     alchemy_std.ssh_units:
-        Init ssh connection:
+        create-ssh-conn:
             func: init_ssh_connection
-        SSH command:
+            input:
+                host: SSH host name
+                username: SSH username
+                password: SSH password
+                port: SSH port
+            defaults:
+                port: 22
+            output:
+                ssh_conn: SSH Connection object
+        #-------------------------------------------------
+        ssh-command:
             func: ssh_runcmd
-
-        SSH mkdir:
+            input:
+                cmd: Command string
+                hostname: SSH Host
+                username: SSH username
+                password: SSH password
+                port: SSH port
+                ssh_conn: SSH Connection
+            defaults:
+                ssh_conn: null
+                hostname: null
+                usernmae: null
+                password: null
+                port: null
+            output:
+                ssh_stdout: Stdout of ssh command
+                ssh_stderr: Stderr of ssh command
+                ssh_rc: Command process's exit code
+        #------------------------------------------------
+        ssh-mkdir:
             func: ssh_mkdir
+            input:
+                ssh_conn: SSH connection
+                dirpath: Directory path
+                create_all: Boolean. Whether to create all intermediate dir
+            defaults:
+                create_all: true
+            output:
+                ssh_stdout: Stdout of ssh command
+                ssh_stderr: Stderr of ssh command
+                ssh_rc: Command process's exit code
 
-        SSH umount:
-            func: ssh_mkdir
+        ssh-umount:
+            func: ssh_umount
+            input:
+                ssh_conn: SSH connection
+                dirpath: Dir to be unmounted
+                options: String. Linux umount options
+            defaults:
+                options: ""
 
-        SSH ls:
+        #-------------------------------------------------
+        ssh-ls:
             func: ssh_ls
+            input:
+                ssh_conn: SSH connection
+                filepath: File or Directory path
+                list_options: String. Command line options for ls.
+            defaults:
+                list_options: ""
+            output:
+                ssh_stdout: Stdout of ssh command
+                ssh_stderr: Stderr of ssh command
+                ssh_rc: Command process's exit code
+
 
     alchemy_std.nfs_units:
-        NFS mount remote:
+        nfs-mount-remote:
             func: nfs_mount_remote
+            input:
+                nfs_host: Host name of the nfs server
+                ssh_session: Connected SSH Session
+                share_path: NFS server share path (as seen in showmount -e command)
+                local_path: Dir at which the nfs needs to be mounter
+                read_only: Mount to be read_only or not
+                fail: Mark as failed if mount is not successfull
+            defaults:
+                read_only: false
+                fail: true
+            output:
+                ssh_stdout: STDOUT stream
+                ssh_stderr: STDERR stream
+                ssh_rc: Return code of the command run
 
 flows:
     nfs_mount:

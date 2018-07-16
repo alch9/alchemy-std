@@ -11,7 +11,7 @@ def build_nfs_mount_cmd(host, share_path, local_path, read_only = False):
     return {'nfs_mount_cmd': cmd}
 
 
-def nfs_mount_remote(ssh_session, nfs_host, share_path, local_path, read_only = False):
+def nfs_mount_remote(ssh_session, nfs_host, share_path, local_path, read_only = False, fail = True):
     """
     input:
         nfs_host: Host name of the nfs server
@@ -29,7 +29,10 @@ def nfs_mount_remote(ssh_session, nfs_host, share_path, local_path, read_only = 
 
     cmd = build_nfs_mount_cmd(nfs_host, share_path, local_path, read_only)['nfs_mount_cmd']
 
-    print "NFS mount:", cmd
     res = ssh_units.ssh_runcmd(cmd, ssh_conn = ssh_session)
+
+    if res['ssh_rc'] != 0 and fail:
+        raise Exception("NFS mount [%s:%s] failed" % (nfs_host, share_path))
+
     return res
 
