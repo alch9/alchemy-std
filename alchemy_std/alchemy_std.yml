@@ -107,6 +107,23 @@ units:
             defaults:
                 options: ""
 
+        #------------------------------------------------
+        # ssh_file_exists(ssh_conn, filepath, attempts = 10, interval = 10, fail = True)
+        ssh-file-exists:
+            func: ssh_file_exists
+            input:
+                ssh_conn: SSH connection
+                filepath: File path to be checked
+                attempts: Number of attempts to be done
+                interval: Interval in seconds after which existence should be checked
+                fail: Fail if file does not exists
+            defaults:
+                attempts: 10
+                interval: 10
+                fail: true
+            output:
+                file_exists: Boolean. True if file exists else False
+
         #-------------------------------------------------
         ssh-git-clone:
             func: ssh_git_clone

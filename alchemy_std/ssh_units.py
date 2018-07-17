@@ -1,5 +1,5 @@
 
-import logging
+import time, logging
 
 log = logging.getLogger(__name__)
 
@@ -52,6 +52,24 @@ def ssh_runcmd(cmd, hostname = None, ssh_conn = None, username = None, password 
             raise Exception("SSH Command failed")
 
     return {'ssh_stdout': stdout, 'ssh_stderr': stderr, 'ssh_rc': rc}
+
+def ssh_file_exists(ssh_conn, filepath, attempts = 10, interval = 10, fail = True):
+    cmd = "test -e {0}".format(filepath)
+
+    while attempts > 0:
+        attempts -= 1
+
+        ret = ssh_runcmd(cmd, ssh_conn = ssh_conn, fail = False)
+        if ret['ssh_rc'] == 0:
+            return {'file_exists': True}
+
+        time.sleep(interval)
+
+    if fail:
+        raise Exception("File [%s] does not exists" % filepath)
+
+    return {'file_exists': False}
+
 
 def ssh_git_clone(ssh_conn, url, clone_name, checkout_path=".", clone_options=""):
     bad_status = {'_status': False}
