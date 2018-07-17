@@ -14,6 +14,10 @@ def init_ssh_connection(host, username = None, password = None, port = 22):
 
     return {'ssh_conn': ssh_conn}
 
+def ssh_runcmd_plus(ctx, cmd, hostname = None, ssh_conn = None, username = None, password = None, port = 22, capture = False, fail=True):
+    cmd = cmd.format(**ctx.values)
+    return ssh_runcmd(cmd, hostname=hostname, ssh_conn=ssh_conn, username=username, password=password, port=port, capture=capture, fail=fail)
+
 def ssh_runcmd(cmd, hostname = None, ssh_conn = None, username = None, password = None, port = 22, capture = False, fail=True):
     import paramiko
     from paramiko.client import SSHClient

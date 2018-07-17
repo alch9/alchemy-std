@@ -59,6 +59,31 @@ units:
                 ssh_stdout: Stdout of ssh command
                 ssh_stderr: Stderr of ssh command
                 ssh_rc: Command process's exit code
+        #-------------------------------------------------
+        ssh-command-plus:
+            func: ssh_runcmd_plus
+            type: meta
+            input:
+                cmd: Command string with formatting with context values
+                hostname: SSH Host
+                username: SSH username
+                password: SSH password
+                port: SSH port
+                ssh_conn: SSH Connection
+                capture: Consume stdout, stderr to print in logs
+                fail: Fail the flow if non-zero exit code
+            defaults:
+                ssh_conn: null
+                hostname: null
+                usernmae: null
+                password: null
+                port: null
+                capture: false
+                fail: true
+            output:
+                ssh_stdout: Stdout of ssh command
+                ssh_stderr: Stderr of ssh command
+                ssh_rc: Command process's exit code
         #------------------------------------------------
         ssh-mkdir:
             func: ssh_mkdir
