@@ -10,9 +10,42 @@ units:
                 yaml_data: Parsed yaml object as Python dictionary
 
     alchemy_std.shell:
-        Command:
+        shell-command:
             func: runcmd
             type: meta
+        #------------------------------------------------------
+        mkdir:
+            func: local_mkdir
+            input:
+                dirpath: Dir path to create
+                create_all: Create intermediate dir or not
+                fail: Fail on create
+            defaults:
+                create_all: true
+                fail: true
+        #------------------------------------------------------
+        umount:
+            func: umount
+            input:
+                mount_path: Dir path to unmount
+                options: Any umount options
+                fail: Fail on create
+            defaults:
+                options: ""
+                fail: true
+        #------------------------------------------------------
+        nfs-mount:
+            func: local_nfs_mount
+            input:
+                nfs_host: NFS Host
+                nfs_share: NFS share path
+                mount_path: Local mount path
+                options: Mount options
+                create_mount_path: Create mountpath if does not exists
+            defaults:
+                options: ""
+                create_mount_path: true
+        #------------------------------------------------------
         Ping:
             type: derived
             input:
@@ -166,6 +199,23 @@ units:
                 local_path: .
                 recursive: false
                 preserve_times: false
+        #-------------------------------------------------
+        scp-get-with-creds:
+            type: derived
+            input:
+                host: Cloud hostname
+                username: Host username
+                password: Host password
+                remote_path: Remote path
+                local_path: Local path where file will be downloaded
+            units:
+                - create-ssh-conn:
+                    host: $host
+                    username: $username
+                    password: $password
+                - scp-get:
+                    local_path: $local_path
+                    remote_path: $remote_path
         #-------------------------------------------------
         scp-put:
             func: scp_put
