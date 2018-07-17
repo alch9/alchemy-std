@@ -14,6 +14,27 @@ def init_ssh_connection(host, username = None, password = None, port = 22):
 
     return {'ssh_conn': ssh_conn}
 
+def scp_get(ctx, ssh_conn, remote_path, local_path='', recursive=False, preserve_times=False):
+    from scp import SCPClient
+
+    remote_path = remote_path.format(**ctx.values)
+    local_path = local_path.format(**ctx.values)
+
+    log.info("SCP GET: From %s to [%s]", remote_path, local_path)
+    scp_client = SCPClient(ssh_conn.get_transport())
+    scp_client.get(remote_path, local_path=local_path, recursive=recursive, preserve_times=preserve_times)
+
+def scp_put(ctx, ssh_conn, local_path, remote_path='', recursive=False, preserve_times=False):
+    from scp import SCPClient
+
+    remote_path = remote_path.format(**ctx.values)
+    local_path = local_path.format(**ctx.values)
+
+    log.info("SCP PUT: From %s to [%s]", local_path, remote_path)
+    scp_client = SCPClient(ssh_conn.get_transport())
+    scp_client.put(local_path, remote_path=remote_path, recursive=recursive, preserve_times=preserve_times)
+
+
 def ssh_runcmd_plus(ctx, cmd, hostname = None, ssh_conn = None, username = None, password = None, port = 22, capture = False, fail=True):
     cmd = cmd.format(**ctx.values)
     return ssh_runcmd(cmd, hostname=hostname, ssh_conn=ssh_conn, username=username, password=password, port=port, capture=capture, fail=fail)

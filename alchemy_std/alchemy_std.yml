@@ -152,6 +152,35 @@ units:
                 ssh_stderr: Stderr of ssh command
                 ssh_rc: Command process's exit code
 
+        #-------------------------------------------------
+        scp-get:
+            func: scp_get
+            type: meta
+            input:
+                ssh_conn: SSH connection
+                remote_path: Remote path
+                local_path: Local path
+                recursive: Copy recursively
+                preserve_times: Preserve file mtimes
+            defaults:
+                local_path: .
+                recursive: false
+                preserve_times: false
+        #-------------------------------------------------
+        scp-put:
+            func: scp_put
+            type: meta
+            input:
+                ssh_conn: SSH connection
+                remote_path: Remote path
+                local_path: Local path
+                recursive: Copy recursively
+                preserve_times: Preserve file mtimes
+            defaults:
+                remote_path: ""
+                recursive: false
+                preserve_times: false
+
 
     alchemy_std.nfs_units:
         nfs-mount-remote:
