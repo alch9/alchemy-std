@@ -49,14 +49,32 @@ def ssh_runcmd(cmd, hostname = None, ssh_conn = None, username = None, password 
 
     return {'ssh_stdout': stdout, 'ssh_stderr': stderr, 'ssh_rc': rc}
 
+def ssh_git_clone(ssh_conn, url, clone_name, checkout_path=".", clone_options=""):
+    bad_status = {'_status': False}
+ 
+    full_checkout_path = "{0}/{1}".format(checkout_path, clone_name)
+    cmd = "rm -fR {0}; git clone {2} {1} {0}".format(full_checkout_path, url, clone_options)
+    log.info("docker cloud git cmd: %s", cmd)
+ 
+    res = ssh_runcmd(cmd, ssh_conn = ssh_conn)
+    if res['ssh_rc'] != 0:
+        return bad_status
+ 
+    return {
+        "final_clone_path": full_checkout_path,
+    }
+	
 
-def ssh_mkdir(ssh_conn, dirpath, create_all=True):
+def ssh_mkdir(ssh_conn, dirpath, create_all=True, fail=True):
     if create_all:
         cmd = "mkdir -p %s" % dirpath
     else:
         cmd = "mkdir %s" % dirpath
 
-    return ssh_runcmd(cmd, ssh_conn = ssh_conn)
+    res = ssh_runcmd(cmd, ssh_conn = ssh_conn)
+    rc = res['ssh_rc']
+    if rc != 0 and fail:
+        raise Exception("SSH mkdir failed wth rc = %s" % rc)
 
 def ssh_umount(ssh_conn, dirpath, options=""):
     cmd = "umount %s %s" % (options, dirpath)

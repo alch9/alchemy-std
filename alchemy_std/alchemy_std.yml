@@ -83,6 +83,20 @@ units:
                 options: ""
 
         #-------------------------------------------------
+        ssh-git-clone:
+            func: ssh_git_clone
+            input:
+                ssh_conn: SSH connection
+                url: Git url
+                clone_name: Name of the clone dirname
+                checkout_path: Dir where clone will happen
+                clone_options: String. Git clone options
+            defaults:
+                checkout_path: .
+                clone_options: ""
+            output:
+                final_clone_path: The path where actual clone happened. This is join of checkout_path and clone_name
+        #-------------------------------------------------
         ssh-ls:
             func: ssh_ls
             input:
