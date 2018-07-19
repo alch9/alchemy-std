@@ -17,8 +17,11 @@ def init_ssh_connection(host, username = None, password = None, port = 22, dryru
 
     return {'ssh_conn': ssh_conn}
 
-def scp_get(ctx, ssh_conn, remote_path, local_path='', recursive=False, preserve_times=False):
+def scp_get(ctx, ssh_conn, remote_path, local_path='', recursive=False, preserve_times=False, dryrun=False):
     from scp import SCPClient
+
+    if dryrun:
+       return
 
     remote_path = remote_path.format(**ctx.values)
     local_path = local_path.format(**ctx.values)
@@ -27,8 +30,11 @@ def scp_get(ctx, ssh_conn, remote_path, local_path='', recursive=False, preserve
     scp_client = SCPClient(ssh_conn.get_transport())
     scp_client.get(remote_path, local_path=local_path, recursive=recursive, preserve_times=preserve_times)
 
-def scp_put(ctx, ssh_conn, local_path, remote_path='', recursive=False, preserve_times=False):
+def scp_put(ctx, ssh_conn, local_path, remote_path='', recursive=False, preserve_times=False, dryrun=False):
     from scp import SCPClient
+ 
+    if dryrun:
+        return
 
     remote_path = remote_path.format(**ctx.values)
     local_path = local_path.format(**ctx.values)
@@ -38,9 +44,9 @@ def scp_put(ctx, ssh_conn, local_path, remote_path='', recursive=False, preserve
     scp_client.put(local_path, remote_path=remote_path, recursive=recursive, preserve_times=preserve_times)
 
 
-def ssh_runcmd_plus(ctx, cmd, hostname = None, ssh_conn = None, username = None, password = None, port = 22, capture = False, fail=True):
+def ssh_runcmd_plus(ctx, cmd, hostname = None, ssh_conn = None, username = None, password = None, port = 22, capture = False, fail=True, dryrun=False):
     cmd = cmd.format(**ctx.values)
-    return ssh_runcmd(cmd, hostname=hostname, ssh_conn=ssh_conn, username=username, password=password, port=port, capture=capture, fail=fail)
+    return ssh_runcmd(cmd, hostname=hostname, ssh_conn=ssh_conn, username=username, password=password, port=port, capture=capture, fail=fail, dryrun=dryrun)
 
 def ssh_runcmd(cmd, hostname=None, ssh_conn=None, username=None, password=None, port=22, capture=False, fail=True, dryrun=False):
     import paramiko
@@ -80,7 +86,10 @@ def ssh_runcmd(cmd, hostname=None, ssh_conn=None, username=None, password=None, 
 
     return {'ssh_stdout': stdout, 'ssh_stderr': stderr, 'ssh_rc': rc}
 
-def ssh_file_exists(ssh_conn, filepath, attempts = 10, interval = 10, fail = True):
+def ssh_file_exists(ssh_conn, filepath, attempts = 10, interval = 10, fail = True, dryrun=False):
+    if dryrun:
+        return {'file_exists': None}
+
     cmd = "test -e {0}".format(filepath)
 
     while attempts > 0:
@@ -98,7 +107,10 @@ def ssh_file_exists(ssh_conn, filepath, attempts = 10, interval = 10, fail = Tru
     return {'file_exists': False}
 
 
-def ssh_git_clone(ssh_conn, url, clone_name, checkout_path=".", clone_options=""):
+def ssh_git_clone(ssh_conn, url, clone_name, checkout_path=".", clone_options="", dryrun=False):
+    if dryrun:
+        return {"final_clone_path": None}
+
     bad_status = {'_status': False}
  
     full_checkout_path = "{0}/{1}".format(checkout_path, clone_name)
@@ -114,7 +126,10 @@ def ssh_git_clone(ssh_conn, url, clone_name, checkout_path=".", clone_options=""
     }
 	
 
-def ssh_mkdir(ssh_conn, dirpath, create_all=True, fail=True):
+def ssh_mkdir(ssh_conn, dirpath, create_all=True, fail=True, dryrun=False):
+    if dryrun:
+        return {'ssh_stdout': None, 'ssh_stderr': None, 'ssh_rc': None}
+
     if create_all:
         cmd = "mkdir -p %s" % dirpath
     else:
@@ -125,10 +140,10 @@ def ssh_mkdir(ssh_conn, dirpath, create_all=True, fail=True):
     if rc != 0 and fail:
         raise Exception("SSH mkdir failed wth rc = %s" % rc)
 
-def ssh_umount(ssh_conn, dirpath, options=""):
+def ssh_umount(ssh_conn, dirpath, options="", dryrun=False):
     cmd = "umount %s %s" % (options, dirpath)
-    return ssh_runcmd(cmd, ssh_conn = ssh_conn, fail=False)
+    return ssh_runcmd(cmd, ssh_conn = ssh_conn, fail=False, dryrun=dryrun)
 
-def ssh_ls(ssh_conn, filepath, list_options=""):
+def ssh_ls(ssh_conn, filepath, list_options="", dryrun=False):
     cmd = "ls {0} {1}".format(list_options, filepath)
-    return ssh_runcmd(cmd, ssh_conn = ssh_conn, capture=True)
+    return ssh_runcmd(cmd, ssh_conn = ssh_conn, capture=True, dryrun=dryrun)

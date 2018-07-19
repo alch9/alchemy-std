@@ -3,9 +3,12 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def _runcmd(cmd, fail=True, capture=False):
+def _runcmd(cmd, fail=True, capture=False, dryrun=False):
     from subprocess import PIPE, Popen
     from alchemy import engine
+
+    if dryrun:
+        return {'shell_stdout': None, 'shell_stderr': None, 'shell_rc': None }
 
     p = Popen(cmd, shell=True, stdout = PIPE, stderr=PIPE)
     p.wait()
@@ -28,10 +31,10 @@ def _runcmd(cmd, fail=True, capture=False):
         'shell_rc': p.returncode
     }
 
-def runcmd(ctx, cmd, fail=True, capture=False):
+def runcmd(ctx, cmd, fail=True, capture=False, dryrun=False):
     cmd = cmd.format(**ctx.values)
 
-    return _runcmd(cmd, fail=fail, capture=capture)
+    return _runcmd(cmd, fail=fail, capture=capture, dryrun=dryrun)
 
 
 def local_mkdir(dirpath, create_all=True, fail=True):
@@ -42,17 +45,17 @@ def local_mkdir(dirpath, create_all=True, fail=True):
 
     return _runcmd(cmd, fail = fail)
 
-def umount(mount_path, options="", fail=True):
+def umount(mount_path, options="", fail=True, dryrun=False):
     cmd = "umount {0} {1}".format(mount_path, options)
-    return _runcmd(cmd, fail=fail)
+    return _runcmd(cmd, fail=fail, dryrun=dryrun)
 
 
-def local_nfs_mount(nfs_host, nfs_share, mount_path, options="", create_mount_path=True):
+def local_nfs_mount(nfs_host, nfs_share, mount_path, options="", create_mount_path=True, dryrun=False):
     if len(options) > 0:
         options = "-o " + options
 
-    if create_mount_path:
+    if not dryrun and create_mount_path:
         local_mkdir(mount_path)
 
     cmd = "mount -t nfs {0}:{1} {2} {3}".format(nfs_host, nfs_share, mount_path, options)
-    return _runcmd(cmd)
+    return _runcmd(cmd, dryrun=dryrun)
