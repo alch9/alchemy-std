@@ -1,3 +1,7 @@
+
+alchemy:
+    cfg_version: 1.0
+
 include: [alchemy]
 
 units:
