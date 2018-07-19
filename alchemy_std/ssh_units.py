@@ -3,9 +3,12 @@ import time, logging
 
 log = logging.getLogger(__name__)
 
-def init_ssh_connection(host, username = None, password = None, port = 22):
+def init_ssh_connection(host, username = None, password = None, port = 22, dryrun=False):
     import paramiko
     from paramiko.client import SSHClient
+
+    if dryrun:
+        return {'ssh_conn': None}
 
     ssh_conn = SSHClient()
     ssh_conn.load_system_host_keys()
@@ -39,9 +42,12 @@ def ssh_runcmd_plus(ctx, cmd, hostname = None, ssh_conn = None, username = None,
     cmd = cmd.format(**ctx.values)
     return ssh_runcmd(cmd, hostname=hostname, ssh_conn=ssh_conn, username=username, password=password, port=port, capture=capture, fail=fail)
 
-def ssh_runcmd(cmd, hostname = None, ssh_conn = None, username = None, password = None, port = 22, capture = False, fail=True):
+def ssh_runcmd(cmd, hostname=None, ssh_conn=None, username=None, password=None, port=22, capture=False, fail=True, dryrun=False):
     import paramiko
     from paramiko.client import SSHClient
+
+    if dryrun:
+        return {'ssh_stdout': None, 'ssh_stderr': None, 'ssh_rc': None}
 
     log.info("SSH CMD: %s", cmd)
 

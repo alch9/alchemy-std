@@ -11,7 +11,7 @@ def build_nfs_mount_cmd(host, share_path, local_path, read_only = False):
     return {'nfs_mount_cmd': cmd}
 
 
-def nfs_mount_remote(ssh_session, nfs_host, share_path, local_path, read_only = False, fail = True):
+def nfs_mount_remote(ssh_session, nfs_host, share_path, local_path, read_only = False, fail = True, dryrun=False):
     """
     input:
         nfs_host: Host name of the nfs server
@@ -26,6 +26,10 @@ def nfs_mount_remote(ssh_session, nfs_host, share_path, local_path, read_only = 
     """
 
     from alchemy_std import ssh_units
+
+    if dryrun:
+        return {'ssh_stdout': None, 'ssh_stderr': None, 'ssh_rc': None}
+
 
     cmd = build_nfs_mount_cmd(nfs_host, share_path, local_path, read_only)['nfs_mount_cmd']
 

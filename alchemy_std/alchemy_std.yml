@@ -256,8 +256,8 @@ units:
 
 flows:
     nfs_mount:
-        - Context:
-            values:
+        - context:
+            varmap:
                 ssh_host: 172.16.21.161
                 ssh_user: root
                 ssh_passwd: druva
@@ -265,52 +265,48 @@ flows:
                 nfs_path: /vol/nfs_dev
                 nfs_mount_path: /root/work/nas
 
-        - Init ssh connection:
+        - create-ssh-conn:
             host: $ssh_host
             username: $ssh_user
             password: $ssh_passwd
 
-        - SSH command:
+        - ssh-command:
             ssh_conn: $ssh_conn
             cmd: mkdir -p /root/work/nas
 
-        - SSH command:
+        - ssh-command:
             ssh_conn: $ssh_conn
             cmd: umount /root/work/nas
 
-        - Print context:
+        - print-context:
             param_list: [cmd]
 
-        - NFS mount remote:
+        - nfs-mount-remote:
             ssh_session: $ssh_conn
             nfs_host: $nfs_host
             share_path: $nfs_path
             local_path: $nfs_mount_path
 
-        - Print stream:
+        - print-stream:
             stream: $ssh_stderr
 
-        - Print stream:
-            stream: $ssh_stderr
-
-        - SSH command:
+        - ssh-command:
             ssh_conn: $ssh_conn
             cmd: ls -l /root/work/nas
 
-        - Print stream:
+        - print-stream:
             stream: $ssh_stdout
 
-flows:
     list-dir:
-        - CLI positional:
+        - cli-positional:
             spec: [dirname]
-        - Command:
-            args:
+        - command:
+            cmd:
                 - ls
                 - -lrt
                 - $input_dirname
-        - Print stream:
-            stream: $shell_stdout
+        - print-stream:
+            stream: $stdout
 
     ping:
         - CLI positional:
