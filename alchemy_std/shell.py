@@ -59,3 +59,13 @@ def local_nfs_mount(nfs_host, nfs_share, mount_path, options="", create_mount_pa
 
     cmd = "mount -t nfs {0}:{1} {2} {3}".format(nfs_host, nfs_share, mount_path, options)
     return _runcmd(cmd, dryrun=dryrun)
+
+def update_etc_hosts_from_file(filepath, dryrun=False):
+    cmd = "cat {0} >> /etc/hosts".format(filepath)
+    return _runcmd(cmd, dryrun=dryrun)
+
+def delete_from_etc_hosts(pattern, dryrun=False):
+    cmd = "grep -v {0} /etc/hosts > /tmp/hosts.del.tmp; cat /tmp/hosts.del.tmp >> /etc/hosts".format(pattern)
+    return _runcmd(cmd, dryrun=dryrun)
+
+

@@ -147,3 +147,19 @@ def ssh_umount(ssh_conn, dirpath, options="", dryrun=False):
 def ssh_ls(ssh_conn, filepath, list_options="", dryrun=False):
     cmd = "ls {0} {1}".format(list_options, filepath)
     return ssh_runcmd(cmd, ssh_conn = ssh_conn, capture=True, dryrun=dryrun)
+
+def ssh_glob_single_file(ctx, ssh_conn, filepath, dryrun=False):
+    if dryrun:
+        return {'resolved_filepath': None}
+
+    filepath = filepath.format(**ctx.values)
+
+    cmd = "ls -1 {0}".format(filepath)
+    
+    ret = ssh_runcmd(cmd, ssh_conn = ssh_conn, capture=True, dryrun=dryrun)
+    resolved_filepath=None
+    for line in ret['ssh_stdout']:
+        line = line.rstrip()
+        resolved_filepath = line
+        return {'resolved_filepath': resolved_filepath}
+

@@ -50,7 +50,7 @@ units:
                 options: ""
                 create_mount_path: true
         #------------------------------------------------------
-        Ping:
+        ping:
             type: derived
             input:
                 host: Host name to ping
@@ -58,12 +58,19 @@ units:
             defaults:
                 count: 1
             units:
-                - to-str:
-                    var: $count
-                - Command:
-                    args: [ping, -c, $str_var, $host]
+                - shell-command:
+                    cmd: "ping -c {count} {host}"
+        #------------------------------------------------------
+        update-etc-hosts-from-file:
+            func: update_etc_hosts_from_file
+            input:
+                filepath: File containing new entries
+        #------------------------------------------------------
+        delete-from-etc-hosts:
+            func: delete_from_etc_hosts
+            input:
+                pattern: Pattern which needs to be removed from /etc/hosts
 
-            
     alchemy_std.ssh_units:
         create-ssh-conn:
             func: init_ssh_connection
@@ -234,7 +241,46 @@ units:
                 remote_path: ""
                 recursive: false
                 preserve_times: false
-
+        #-------------------------------------------------
+        ssh-ping:
+            type: derived
+            input:
+                ssh_conn: SSH Connection
+                host: Host to ping
+                count: Number of times to call ping
+            defaults:
+                count: 1
+            units:
+                - ssh-command-plus:
+                    ssh_conn: $ssh_conn
+                    cmd: "ping -c {count} {host}"
+        #-------------------------------------------------
+        ssh-uninstall-debian-pkg:
+            type: derived
+            input:
+                ssh_conn: SSH Connection
+                pkgname: Name of the package
+            units:
+                - ssh-command-plus:
+                    ssh_conn: $ssh_conn
+                    cmd: "dpkg -r {pkgname}"
+        #-------------------------------------------------
+        ssh-install-debian-pkg:
+            type: derived
+            input:
+                ssh_conn: SSH Connection
+                filepath: File path to the debian package
+            units:
+                - ssh-command-plus:
+                    ssh_conn: $ssh_conn
+                    cmd: "dpkg -i {filepath}"
+        #-------------------------------------------------
+        ssh-glob-single-file:
+            type: meta
+            func: ssh_glob_single_file
+            input:
+                ssh_conn: SSH Connection
+                filepath: File path pattern
 
     alchemy_std.nfs_units:
         nfs-mount-remote:
