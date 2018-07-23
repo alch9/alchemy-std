@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='alchemy-std',
-    version='0.1.0',
+    version='0.2.1',
     author='Sudeep Jathar',
     author_email='sudeep.jathar@gmail.com',
     url='https://github.com/sudeep9/alchemy-std',
@@ -17,7 +17,7 @@ setup(
     ],
 
     packages=['alchemy_std'],
-    install_requires=['paramiko'],
+    install_requires=['alchemy', 'paramiko'],
     package_data = {
         'alchemy_std': ["*.yml"]
     }
