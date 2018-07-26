@@ -5,300 +5,326 @@ alchemy:
 include: [alchemy]
 
 units:
-    alchemy_std.yaml_units:
-        load-yaml-file:
-            func: load_yaml_file
-            input:
-                filepath: Path to yaml file
-            output:
-                yaml_data: Parsed yaml object as Python dictionary
+    shell-command:
+        desc: Executes shell command
+        type: meta
+        func: alchemy_std.shell.runcmd
+        input:
+            cmd: Command string 
+            fail: Mark the unit as failed if cmd exits with non-zero error code
+            capture: Capture the output of the command i.e. STDOUT and STDERR
+        defaults:
+            fail: true
+            capture: false
+    #------------------------------------------------------
+    mkdir:
+        desc: Creates a dir
+        func: alchemy_std.shell.local_mkdir
+        input:
+            dirpath: Dir path to create
+            create_all: Create intermediate dir or not
+            fail: Fail on create
+        defaults:
+            create_all: true
+            fail: true
+    #------------------------------------------------------
+    umount:
+        desc: Unmounts a mount point locally
+        func: alchemy_std.shell.umount
+        input:
+            mount_path: Dir path to unmount
+            options: Any umount options
+            fail: Fail on create
+        defaults:
+            options: ""
+            fail: true
+    #------------------------------------------------------
+    nfs-mount:
+        desc: Mounts a nfs share locally
+        func: alchemy_std.shell.local_nfs_mount
+        input:
+            nfs_host: NFS Host
+            nfs_share: NFS share path
+            mount_path: Local mount path
+            options: Mount options
+            create_mount_path: Create mountpath if does not exists
+        defaults:
+            options: ""
+            create_mount_path: true
+    #------------------------------------------------------
+    ping:
+        desc: Pings a host. Unit will fail if unable to ping
+        type: derived
+        input:
+            host: Host name to ping
+            count: Number of times to ping
+        defaults:
+            count: 1
+        units:
+            - shell-command:
+                cmd: "ping -c {count} {host}"
+    #------------------------------------------------------
+    update-etc-hosts-from-file:
+        desc: Updates /etc/hosts with contents from a given file. The new entries are appended.
+        func: alchemy_std.shell.update_etc_hosts_from_file
+        input:
+            filepath: File containing new entries
+    #------------------------------------------------------
+    delete-from-etc-hosts:
+        desc: Deletes entries from /etc/hosts based on pattern
+        func: alchemy_std.shell.delete_from_etc_hosts
+        input:
+            pattern: Pattern which needs to be removed from /etc/hosts
 
-    alchemy_std.shell:
-        shell-command:
-            func: runcmd
-            type: meta
-        #------------------------------------------------------
-        mkdir:
-            func: local_mkdir
-            input:
-                dirpath: Dir path to create
-                create_all: Create intermediate dir or not
-                fail: Fail on create
-            defaults:
-                create_all: true
-                fail: true
-        #------------------------------------------------------
-        umount:
-            func: umount
-            input:
-                mount_path: Dir path to unmount
-                options: Any umount options
-                fail: Fail on create
-            defaults:
-                options: ""
-                fail: true
-        #------------------------------------------------------
-        nfs-mount:
-            func: local_nfs_mount
-            input:
-                nfs_host: NFS Host
-                nfs_share: NFS share path
-                mount_path: Local mount path
-                options: Mount options
-                create_mount_path: Create mountpath if does not exists
-            defaults:
-                options: ""
-                create_mount_path: true
-        #------------------------------------------------------
-        ping:
-            type: derived
-            input:
-                host: Host name to ping
-                count: Number of times to ping
-            defaults:
-                count: 1
-            units:
-                - shell-command:
-                    cmd: "ping -c {count} {host}"
-        #------------------------------------------------------
-        update-etc-hosts-from-file:
-            func: update_etc_hosts_from_file
-            input:
-                filepath: File containing new entries
-        #------------------------------------------------------
-        delete-from-etc-hosts:
-            func: delete_from_etc_hosts
-            input:
-                pattern: Pattern which needs to be removed from /etc/hosts
+    create-ssh-conn:
+        desc: Creates a SSH connection (paramiko). The ssh_conn can be used in many other units
+        func: alchemy_std.ssh_units.init_ssh_connection
+        input:
+            host: SSH host name
+            username: SSH username
+            password: SSH password
+            port: SSH port
+        defaults:
+            username: null
+            password: null
+            port: 22
+        output:
+            ssh_conn: SSH Connection object
+    #-------------------------------------------------
+    ssh-command:
+        desc: Runs shell command over SSH. Either ssh creds (host, user, passwd) or ssh_conn needs to be provided
+        func: alchemy_std.ssh_units.ssh_runcmd
+        input:
+            cmd: Command string
+            hostname: SSH Host
+            username: SSH username
+            password: SSH password
+            port: SSH port
+            ssh_conn: SSH Connection
+            fail: Mark the unit as failed if cmd exits with non-zero error code
+            capture: Capture the output of the command i.e. STDOUT and STDERR
+        defaults:
+            ssh_conn: null
+            hostname: null
+            username: null
+            password: null
+            port: 22
+            capture: false
+            fail: true
+        output:
+            ssh_stdout: Stdout of ssh command
+            ssh_stderr: Stderr of ssh command
+            ssh_rc: Command process's exit code
+    #-------------------------------------------------
+    ssh-command-plus:
+        desc: Runs shell command over SSH. Either ssh creds (host, user, passwd) or ssh_conn needs to be provided.
+        func: alchemy_std.ssh_units.ssh_runcmd_plus
+        type: meta
+        input:
+            cmd: Command string with formatting with context values
+            hostname: SSH Host
+            username: SSH username
+            password: SSH password
+            port: SSH port
+            ssh_conn: SSH Connection
+            capture: Consume stdout, stderr to print in logs
+            fail: Fail the flow if non-zero exit code
+        defaults:
+            ssh_conn: null
+            hostname: null
+            username: null
+            password: null
+            port: 22
+            capture: false
+            fail: true
+        output:
+            ssh_stdout: Stdout of ssh command
+            ssh_stderr: Stderr of ssh command
+            ssh_rc: Command process's exit code
+    #------------------------------------------------
+    ssh-mkdir:
+        desc: Creates a dir on remote machine
+        func: alchemy_std.ssh_units.ssh_mkdir
+        input:
+            ssh_conn: SSH connection
+            dirpath: Directory path
+            create_all: Boolean. Whether to create all intermediate dir
+            fail: Fail the unit if non-zero exit code
+        defaults:
+            create_all: true
+            fail: true
+        output:
+            ssh_stdout: Stdout of ssh command
+            ssh_stderr: Stderr of ssh command
+            ssh_rc: Command process's exit code
 
-    alchemy_std.ssh_units:
-        create-ssh-conn:
-            func: init_ssh_connection
-            input:
-                host: SSH host name
-                username: SSH username
-                password: SSH password
-                port: SSH port
-            defaults:
-                port: 22
-            output:
-                ssh_conn: SSH Connection object
-        #-------------------------------------------------
-        ssh-command:
-            func: ssh_runcmd
-            input:
-                cmd: Command string
-                hostname: SSH Host
-                username: SSH username
-                password: SSH password
-                port: SSH port
-                ssh_conn: SSH Connection
-            defaults:
-                ssh_conn: null
-                hostname: null
-                usernmae: null
-                password: null
-                port: null
-            output:
-                ssh_stdout: Stdout of ssh command
-                ssh_stderr: Stderr of ssh command
-                ssh_rc: Command process's exit code
-        #-------------------------------------------------
-        ssh-command-plus:
-            func: ssh_runcmd_plus
-            type: meta
-            input:
-                cmd: Command string with formatting with context values
-                hostname: SSH Host
-                username: SSH username
-                password: SSH password
-                port: SSH port
-                ssh_conn: SSH Connection
-                capture: Consume stdout, stderr to print in logs
-                fail: Fail the flow if non-zero exit code
-            defaults:
-                ssh_conn: null
-                hostname: null
-                usernmae: null
-                password: null
-                port: null
-                capture: false
-                fail: true
-            output:
-                ssh_stdout: Stdout of ssh command
-                ssh_stderr: Stderr of ssh command
-                ssh_rc: Command process's exit code
-        #------------------------------------------------
-        ssh-mkdir:
-            func: ssh_mkdir
-            input:
-                ssh_conn: SSH connection
-                dirpath: Directory path
-                create_all: Boolean. Whether to create all intermediate dir
-            defaults:
-                create_all: true
-            output:
-                ssh_stdout: Stdout of ssh command
-                ssh_stderr: Stderr of ssh command
-                ssh_rc: Command process's exit code
+    ssh-umount:
+        desc: Unmounts a mount point over a ssh connection
+        func: alchemy_std.ssh_units.ssh_umount
+        input:
+            ssh_conn: SSH connection
+            dirpath: Dir to be unmounted
+            options: String. Linux umount options
+        defaults:
+            options: ""
 
-        ssh-umount:
-            func: ssh_umount
-            input:
-                ssh_conn: SSH connection
-                dirpath: Dir to be unmounted
-                options: String. Linux umount options
-            defaults:
-                options: ""
+    #------------------------------------------------
+    ssh-file-exists:
+        desc: Checks for existance of file on a remote host
+        func: alchemy_std.ssh_units.ssh_file_exists
+        input:
+            ssh_conn: SSH connection
+            filepath: File path to be checked
+            attempts: Number of attempts to be done
+            interval: Interval in seconds after which existence should be checked
+            fail: Fail if file does not exists
+        defaults:
+            attempts: 10
+            interval: 10
+            fail: true
+        output:
+            file_exists: Boolean. True if file exists else False
 
-        #------------------------------------------------
-        # ssh_file_exists(ssh_conn, filepath, attempts = 10, interval = 10, fail = True)
-        ssh-file-exists:
-            func: ssh_file_exists
-            input:
-                ssh_conn: SSH connection
-                filepath: File path to be checked
-                attempts: Number of attempts to be done
-                interval: Interval in seconds after which existence should be checked
-                fail: Fail if file does not exists
-            defaults:
-                attempts: 10
-                interval: 10
-                fail: true
-            output:
-                file_exists: Boolean. True if file exists else False
+    #-------------------------------------------------
+    ssh-git-clone:
+        desc: Clones a git repo over a remotely i.e. over a ssh connection
+        func: alchemy_std.ssh_units.ssh_git_clone
+        input:
+            ssh_conn: SSH connection
+            url: Git url
+            clone_name: Name of the clone dirname
+            checkout_path: Dir where clone will happen
+            clone_options: String. Git clone options
+        defaults:
+            checkout_path: .
+            clone_options: ""
+        output:
+            final_clone_path: The path where actual clone happened. This is join of checkout_path and clone_name
+    #-------------------------------------------------
+    ssh-ls:
+        desc: Dir listing on a remote host
+        func: alchemy_std.ssh_units.ssh_ls
+        input:
+            ssh_conn: SSH connection
+            filepath: File or Directory path
+            list_options: String. Command line options for ls.
+        defaults:
+            list_options: ""
+        output:
+            ssh_stdout: Stdout of ssh command
+            ssh_stderr: Stderr of ssh command
+            ssh_rc: Command process's exit code
 
-        #-------------------------------------------------
-        ssh-git-clone:
-            func: ssh_git_clone
-            input:
-                ssh_conn: SSH connection
-                url: Git url
-                clone_name: Name of the clone dirname
-                checkout_path: Dir where clone will happen
-                clone_options: String. Git clone options
-            defaults:
-                checkout_path: .
-                clone_options: ""
-            output:
-                final_clone_path: The path where actual clone happened. This is join of checkout_path and clone_name
-        #-------------------------------------------------
-        ssh-ls:
-            func: ssh_ls
-            input:
-                ssh_conn: SSH connection
-                filepath: File or Directory path
-                list_options: String. Command line options for ls.
-            defaults:
-                list_options: ""
-            output:
-                ssh_stdout: Stdout of ssh command
-                ssh_stderr: Stderr of ssh command
-                ssh_rc: Command process's exit code
+    #-------------------------------------------------
+    scp-get:
+        desc: Copies files/folders over ssh
+        func: alchemy_std.ssh_units.scp_get
+        type: meta
+        input:
+            ssh_conn: SSH connection
+            remote_path: Remote path
+            local_path: Local path
+            recursive: Copy recursively
+            preserve_times: Preserve file mtimes
+        defaults:
+            local_path: ""
+            recursive: false
+            preserve_times: false
+    #-------------------------------------------------
+    scp-get-with-creds:
+        desc: Downloads files/folders from remote host using ssh creds as opposed to a ssh connection
+        type: derived
+        input:
+            host: Cloud hostname
+            username: Host username
+            password: Host password
+            remote_path: Remote path
+            local_path: Local path where file will be downloaded
+        units:
+            - create-ssh-conn:
+                host: $host
+                username: $username
+                password: $password
+            - scp-get:
+                local_path: $local_path
+                remote_path: $remote_path
+    #-------------------------------------------------
+    scp-put:
+        desc: Transfers files/folders to a remote host
+        func: alchemy_std.ssh_units.scp_put
+        type: meta
+        input:
+            ssh_conn: SSH connection
+            remote_path: Remote path
+            local_path: Local path
+            recursive: Copy recursively
+            preserve_times: Preserve file mtimes
+        defaults:
+            remote_path: ""
+            recursive: false
+            preserve_times: false
+    #-------------------------------------------------
+    ssh-ping:
+        desc: Pings a host on a remote machine.
+        type: derived
+        input:
+            ssh_conn: SSH Connection
+            host: Host to ping
+            count: Number of times to call ping
+        defaults:
+            count: 1
+        units:
+            - ssh-command-plus:
+                ssh_conn: $ssh_conn
+                cmd: "ping -c {count} {host}"
+    #-------------------------------------------------
+    ssh-uninstall-debian-pkg:
+        desc: Uninstalls a debian package on a remote host
+        type: derived
+        input:
+            ssh_conn: SSH Connection
+            pkgname: Name of the package
+        units:
+            - ssh-command-plus:
+                ssh_conn: $ssh_conn
+                cmd: "dpkg -r {pkgname}"
+    #-------------------------------------------------
+    ssh-install-debian-pkg:
+        desc: Installs a debian package on a remote host.
+        type: derived
+        input:
+            ssh_conn: SSH Connection
+            filepath: File path of the debian package on the remote host
+        units:
+            - ssh-command-plus:
+                ssh_conn: $ssh_conn
+                cmd: "dpkg -i {filepath}"
+    #-------------------------------------------------
+    ssh-glob-single-file:
+        desc: Resolves shell wildcards in a path and returns list of matching files from a remote host
+        type: meta
+        func: alchemy_std.ssh_units.ssh_glob_single_file
+        input:
+            ssh_conn: SSH Connection
+            filepath: File path pattern
 
-        #-------------------------------------------------
-        scp-get:
-            func: scp_get
-            type: meta
-            input:
-                ssh_conn: SSH connection
-                remote_path: Remote path
-                local_path: Local path
-                recursive: Copy recursively
-                preserve_times: Preserve file mtimes
-            defaults:
-                local_path: .
-                recursive: false
-                preserve_times: false
-        #-------------------------------------------------
-        scp-get-with-creds:
-            type: derived
-            input:
-                host: Cloud hostname
-                username: Host username
-                password: Host password
-                remote_path: Remote path
-                local_path: Local path where file will be downloaded
-            units:
-                - create-ssh-conn:
-                    host: $host
-                    username: $username
-                    password: $password
-                - scp-get:
-                    local_path: $local_path
-                    remote_path: $remote_path
-        #-------------------------------------------------
-        scp-put:
-            func: scp_put
-            type: meta
-            input:
-                ssh_conn: SSH connection
-                remote_path: Remote path
-                local_path: Local path
-                recursive: Copy recursively
-                preserve_times: Preserve file mtimes
-            defaults:
-                remote_path: ""
-                recursive: false
-                preserve_times: false
-        #-------------------------------------------------
-        ssh-ping:
-            type: derived
-            input:
-                ssh_conn: SSH Connection
-                host: Host to ping
-                count: Number of times to call ping
-            defaults:
-                count: 1
-            units:
-                - ssh-command-plus:
-                    ssh_conn: $ssh_conn
-                    cmd: "ping -c {count} {host}"
-        #-------------------------------------------------
-        ssh-uninstall-debian-pkg:
-            type: derived
-            input:
-                ssh_conn: SSH Connection
-                pkgname: Name of the package
-            units:
-                - ssh-command-plus:
-                    ssh_conn: $ssh_conn
-                    cmd: "dpkg -r {pkgname}"
-        #-------------------------------------------------
-        ssh-install-debian-pkg:
-            type: derived
-            input:
-                ssh_conn: SSH Connection
-                filepath: File path to the debian package
-            units:
-                - ssh-command-plus:
-                    ssh_conn: $ssh_conn
-                    cmd: "dpkg -i {filepath}"
-        #-------------------------------------------------
-        ssh-glob-single-file:
-            type: meta
-            func: ssh_glob_single_file
-            input:
-                ssh_conn: SSH Connection
-                filepath: File path pattern
-
-    alchemy_std.nfs_units:
-        nfs-mount-remote:
-            func: nfs_mount_remote
-            input:
-                nfs_host: Host name of the nfs server
-                ssh_session: Connected SSH Session
-                share_path: NFS server share path (as seen in showmount -e command)
-                local_path: Dir at which the nfs needs to be mounter
-                read_only: Mount to be read_only or not
-                fail: Mark as failed if mount is not successfull
-            defaults:
-                read_only: false
-                fail: true
-            output:
-                ssh_stdout: STDOUT stream
-                ssh_stderr: STDERR stream
-                ssh_rc: Return code of the command run
+    nfs-mount-remote:
+        desc: Mounts a nfs share on a remote host
+        func: alchemy_std.nfs_units.nfs_mount_remote
+        input:
+            nfs_host: Host name of the nfs server
+            ssh_session: Connected SSH Session
+            share_path: NFS server share path (as seen in showmount -e command)
+            local_path: Dir at which the nfs needs to be mounter
+            read_only: Mount to be read_only or not
+            fail: Mark as failed if mount is not successfull
+        defaults:
+            read_only: false
+            fail: true
+        output:
+            ssh_stdout: STDOUT stream
+            ssh_stderr: STDERR stream
+            ssh_rc: Return code of the command run
 
 flows:
     nfs_mount:
